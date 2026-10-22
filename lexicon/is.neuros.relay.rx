@@ -1,0 +1,36 @@
+{
+	"lexicon": 1,
+	"id": "is.neuros.relay.rx",
+	"description": "",
+	"defs": {
+		"main": {
+			"type": "subscription",
+			"parameters": {
+				"type": "params",
+				"required": ["allocationId"],
+				"properties": {
+					"allocationId": {
+						"description": "The id of the allocation to use for relaying.",
+						"type": "ref",
+						"ref": "is.neuros.types#allocationId"
+					}
+				}
+			},
+			"message": {
+				"schema": {
+					"type": "union",
+					"refs": ["packet"]
+				}
+			},
+			"errors": [
+			]
+		},
+		"packet": {
+			"type": "object",
+			"required": ["data"],
+			"properties": {
+				"data": { "type": "bytes" }
+			}
+		}
+	}
+}
