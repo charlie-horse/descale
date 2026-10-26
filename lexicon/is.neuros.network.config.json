@@ -1,0 +1,86 @@
+{
+	"lexicon": 1,
+	"id": "is.neuros.network.config",
+	"defs": {
+		"main": {
+			"type": "record",
+			"description": "Network-wide settings and the admin list. Stored in the network's repo. Signed by the network root key (#neuros_root in the network DID document).",
+			"key": "literal:self",
+			"record": {
+				"type": "object",
+				"required": ["network", "seq", "ipv4Prefix", "admins", "maxApprovalSeconds", "createdAt", "signature"],
+				"properties": {
+					"network": {
+						"type": "string",
+						"format": "did",
+						"description": "The network DID. Must match the repo this record is stored in."
+					},
+					"seq": {
+						"type": "integer",
+						"minimum": 1,
+						"description": "Increases with every new config. Nodes reject a config with a lower seq than one they have seen."
+					},
+					"name": {
+						"type": "string",
+						"maxLength": 640,
+						"maxGraphemes": 64
+					},
+					"ipv4Prefix": {
+						"type": "ref",
+						"ref": "is.neuros.defs#ipv4Prefix",
+						"description": "The network's IPv4 address space."
+					},
+					"ipv6Prefix": {
+						"type": "ref",
+						"ref": "is.neuros.defs#ipv6Prefix",
+						"description": "Optional IPv6 ULA /96. A node's IPv6 address is this prefix followed by its 32 IPv4 bits."
+					},
+					"admins": {
+						"type": "array",
+						"minLength": 1,
+						"maxLength": 32,
+						"items": { "type": "ref", "ref": "#admin" }
+					},
+					"maxApprovalSeconds": {
+						"type": "integer",
+						"minimum": 3600,
+						"maximum": 31536000,
+						"description": "Longest allowed approval lifetime. Also how long nodes keep a revocation. Suggested: 2592000 (30 days)."
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "datetime"
+					},
+					"signature": {
+						"type": "ref",
+						"ref": "is.neuros.defs#signature",
+						"description": "Made with the network root key."
+					}
+				}
+			}
+		},
+		"admin": {
+			"type": "object",
+			"required": ["did", "keys", "ipv4Range"],
+			"properties": {
+				"did": {
+					"type": "string",
+					"format": "did",
+					"description": "The admin's account."
+				},
+				"keys": {
+					"type": "array",
+					"minLength": 1,
+					"maxLength": 16,
+					"description": "did:keys this admin signs with, usually one per admin device.",
+					"items": { "type": "string", "format": "did" }
+				},
+				"ipv4Range": {
+					"type": "ref",
+					"ref": "is.neuros.defs#ipv4Prefix",
+					"description": "The part of the network's ipv4Prefix this admin assigns addresses from. Admin ranges must not overlap."
+				}
+			}
+		}
+	}
+}

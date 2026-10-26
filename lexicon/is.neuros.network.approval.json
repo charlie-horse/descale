@@ -1,0 +1,60 @@
+{
+	"lexicon": 1,
+	"id": "is.neuros.network.approval",
+	"defs": {
+		"main": {
+			"type": "record",
+			"description": "An admin's approval of one node. Stored in the network's repo. The record key is the node's IPv4 address, so each address can only be assigned once. Create new approvals; only renewals overwrite.",
+			"key": "any",
+			"record": {
+				"type": "object",
+				"required": ["network", "owner", "node", "keys", "ipv4", "issuedAt", "expiresAt", "signature"],
+				"properties": {
+					"network": {
+						"type": "string",
+						"format": "did",
+						"description": "The network DID. Must match the repo this record is stored in."
+					},
+					"owner": {
+						"type": "string",
+						"format": "did",
+						"description": "The account that owns the node. Its repo holds the node's declaration."
+					},
+					"node": {
+						"type": "string",
+						"format": "at-uri",
+						"description": "The node's is.neuros.node.declaration record."
+					},
+					"keys": {
+						"type": "ref",
+						"ref": "is.neuros.defs#nodeKeys"
+					},
+					"ipv4": {
+						"type": "ref",
+						"ref": "is.neuros.defs#ipv4",
+						"description": "Must equal the record key, and lie inside the signing admin's ipv4Range."
+					},
+					"relay": {
+						"type": "boolean",
+						"default": false,
+						"description": "Whether this node may act as a relay."
+					},
+					"issuedAt": {
+						"type": "string",
+						"format": "datetime"
+					},
+					"expiresAt": {
+						"type": "string",
+						"format": "datetime",
+						"description": "At most maxApprovalSeconds after issuedAt."
+					},
+					"signature": {
+						"type": "ref",
+						"ref": "is.neuros.defs#signature",
+						"description": "Made with a key of an admin listed in the current config."
+					}
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,38 @@
+{
+	"lexicon": 1,
+	"id": "is.neuros.relay.subscribeSignals",
+	"defs": {
+		"main": {
+			"type": "subscription",
+			"description": "Receive sealed signals addressed to the caller. Requires a node-signed JWT in the Authorization header of the WebSocket request. One connection per node per relay.",
+			"message": {
+				"schema": {
+					"type": "union",
+					"refs": ["#signal"]
+				}
+			},
+			"errors": [
+				{
+					"name": "ConnectionReplaced",
+					"description": "A newer connection from the same node took over."
+				}
+			]
+		},
+		"signal": {
+			"type": "object",
+			"required": ["from", "payload"],
+			"properties": {
+				"from": {
+					"type": "ref",
+					"ref": "is.neuros.defs#nodeId",
+					"description": "The sender, as authenticated by the relay. The sealed payload also proves it."
+				},
+				"payload": {
+					"type": "bytes",
+					"maxLength": 8192,
+					"description": "As sent with is.neuros.relay.sendSignal."
+				}
+			}
+		}
+	}
+}

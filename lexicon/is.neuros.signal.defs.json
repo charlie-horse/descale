@@ -1,0 +1,104 @@
+{
+	"lexicon": 1,
+	"id": "is.neuros.signal.defs",
+	"description": "Plaintext signals exchanged between nodes, sealed inside is.neuros.relay.sendSignal payloads. Each plaintext is one of the objects below, identified by its $type.",
+	"defs": {
+		"offer": {
+			"type": "object",
+			"description": "Starts or restarts a connection. The offerer takes the ICE controlling role. If both sides offer at once, the offer from the lower node ID wins.",
+			"required": ["session", "createdAt", "ice", "sync"],
+			"properties": {
+				"session": { "type": "ref", "ref": "#sessionId" },
+				"createdAt": {
+					"type": "string",
+					"format": "datetime",
+					"description": "Recipients drop signals more than 60 seconds old."
+				},
+				"ice": { "type": "ref", "ref": "#iceParams" },
+				"sync": { "type": "ref", "ref": "#syncState" }
+			}
+		},
+		"answer": {
+			"type": "object",
+			"description": "Accepts an offer, after the handshake check and peer validation pass.",
+			"required": ["session", "createdAt", "ice", "sync"],
+			"properties": {
+				"session": { "type": "ref", "ref": "#sessionId" },
+				"createdAt": { "type": "string", "format": "datetime" },
+				"ice": { "type": "ref", "ref": "#iceParams" },
+				"sync": { "type": "ref", "ref": "#syncState" }
+			}
+		},
+		"candidate": {
+			"type": "object",
+			"description": "An ICE candidate found after the offer or answer was sent.",
+			"required": ["session", "createdAt", "candidate"],
+			"properties": {
+				"session": { "type": "ref", "ref": "#sessionId" },
+				"createdAt": { "type": "string", "format": "datetime" },
+				"candidate": { "type": "ref", "ref": "#iceCandidate" }
+			}
+		},
+		"records": {
+			"type": "object",
+			"description": "Signed network records sent directly to a peer whose network repo is behind. Verify each exactly like a record read from the repo.",
+			"required": ["records"],
+			"properties": {
+				"records": {
+					"type": "array",
+					"maxLength": 64,
+					"items": { "type": "unknown" }
+				}
+			}
+		},
+		"sessionId": {
+			"type": "string",
+			"description": "Random ID chosen by the offerer; shared by every signal of one connection attempt.",
+			"minLength": 8,
+			"maxLength": 64
+		},
+		"iceParams": {
+			"type": "object",
+			"required": ["ufrag", "pwd", "candidates"],
+			"properties": {
+				"ufrag": {
+					"type": "string",
+					"minLength": 4,
+					"maxLength": 256
+				},
+				"pwd": {
+					"type": "string",
+					"minLength": 22,
+					"maxLength": 256
+				},
+				"candidates": {
+					"type": "array",
+					"maxLength": 32,
+					"items": { "type": "ref", "ref": "#iceCandidate" }
+				}
+			}
+		},
+		"iceCandidate": {
+			"type": "string",
+			"description": "An ICE candidate in SDP attribute form (RFC 8839), e.g. 'candidate:1 1 udp 2130706431 192.0.2.1 41641 typ host'.",
+			"maxLength": 512
+		},
+		"syncState": {
+			"type": "object",
+			"description": "Compared during the handshake check. On a mismatch, the side that's behind syncs before continuing.",
+			"required": ["configSeq", "revocationsDigest"],
+			"properties": {
+				"configSeq": {
+					"type": "integer",
+					"minimum": 1
+				},
+				"revocationsDigest": {
+					"type": "bytes",
+					"minLength": 32,
+					"maxLength": 32,
+					"description": "SHA-256 over the sorted, newline-joined did:keys of all revocations currently held."
+				}
+			}
+		}
+	}
+}

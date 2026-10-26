@@ -1,0 +1,49 @@
+{
+	"lexicon": 1,
+	"id": "is.neuros.relay.getIceServers",
+	"defs": {
+		"main": {
+			"type": "query",
+			"description": "Get this relay's STUN and TURN servers, with short-lived TURN credentials. Requires a node-signed JWT.",
+			"output": {
+				"encoding": "application/json",
+				"schema": {
+					"type": "object",
+					"required": ["iceServers"],
+					"properties": {
+						"iceServers": {
+							"type": "array",
+							"items": { "type": "ref", "ref": "#iceServer" }
+						}
+					}
+				}
+			}
+		},
+		"iceServer": {
+			"type": "object",
+			"description": "One STUN or TURN server, shaped like WebRTC's RTCIceServer.",
+			"required": ["urls"],
+			"properties": {
+				"urls": {
+					"type": "array",
+					"minLength": 1,
+					"description": "e.g. 'stun:relay.example.com:3478', 'turn:relay.example.com:3478?transport=udp', 'turns:relay.example.com:5349?transport=tcp'.",
+					"items": { "type": "string", "format": "uri" }
+				},
+				"username": {
+					"type": "string",
+					"maxLength": 256
+				},
+				"credential": {
+					"type": "string",
+					"maxLength": 256
+				},
+				"expiresAt": {
+					"type": "string",
+					"format": "datetime",
+					"description": "When the credentials stop working. Fetch new ones before then."
+				}
+			}
+		}
+	}
+}

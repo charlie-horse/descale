@@ -1,0 +1,77 @@
+{
+	"lexicon": 1,
+	"id": "is.neuros.defs",
+	"description": "Types shared across Descale lexicons.",
+	"defs": {
+		"signature": {
+			"type": "object",
+			"description": "A signature over the record's DAG-CBOR encoding with its 'signature' field removed. ECDSA over SHA-256, 64-byte compact low-S, as used for ATProto commits.",
+			"required": ["key", "value"],
+			"properties": {
+				"key": {
+					"type": "string",
+					"format": "did",
+					"description": "The signing key as a did:key (P-256 or K-256)."
+				},
+				"value": {
+					"type": "bytes",
+					"minLength": 64,
+					"maxLength": 64
+				}
+			}
+		},
+		"nodeKeys": {
+			"type": "object",
+			"description": "The public keys of one node.",
+			"required": ["signingKey", "wireguardKey", "signalKey"],
+			"properties": {
+				"signingKey": {
+					"type": "ref",
+					"ref": "#nodeId",
+					"description": "Signs the node's declaration and relay requests. Also the node's ID."
+				},
+				"wireguardKey": {
+					"type": "bytes",
+					"description": "WireGuard (X25519) public key.",
+					"minLength": 32,
+					"maxLength": 32
+				},
+				"signalKey": {
+					"type": "bytes",
+					"description": "X25519 public key used to seal signals to this node. Separate from the WireGuard key.",
+					"minLength": 32,
+					"maxLength": 32
+				}
+			}
+		},
+		"nodeId": {
+			"type": "string",
+			"format": "did",
+			"description": "A node's ID: the did:key of its signing key (P-256 or K-256)."
+		},
+		"ipv4": {
+			"type": "string",
+			"description": "An IPv4 address in dotted-decimal form, e.g. '100.80.0.5'.",
+			"minLength": 7,
+			"maxLength": 15
+		},
+		"ipv4Prefix": {
+			"type": "string",
+			"description": "An IPv4 prefix in CIDR form, e.g. '100.80.0.0/16'.",
+			"minLength": 9,
+			"maxLength": 18
+		},
+		"ipv6Prefix": {
+			"type": "string",
+			"description": "An IPv6 prefix in CIDR form, e.g. 'fd5e:7a11:9c04::/96'.",
+			"minLength": 4,
+			"maxLength": 43
+		},
+		"ipAddress": {
+			"type": "string",
+			"description": "An IPv4 or IPv6 address in text form.",
+			"minLength": 2,
+			"maxLength": 45
+		}
+	}
+}
