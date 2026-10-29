@@ -1,6 +1,6 @@
 {
 	"lexicon": 1,
-	"id": "is.neuros.relay.subscribeSignals",
+	"id": "is.neuros.descale.relay.subscribeSignals",
 	"defs": {
 		"main": {
 			"type": "subscription",
@@ -24,13 +24,13 @@
 			"properties": {
 				"from": {
 					"type": "ref",
-					"ref": "is.neuros.defs#nodeId",
+					"ref": "is.neuros.descale.defs#nodeId",
 					"description": "The sender, as authenticated by the relay. The sealed payload also proves it."
 				},
 				"payload": {
 					"type": "bytes",
 					"maxLength": 8192,
-					"description": "As sent with is.neuros.relay.sendSignal."
+					"description": "As sent with is.neuros.descale.relay.sendSignal."
 				}
 			}
 		}

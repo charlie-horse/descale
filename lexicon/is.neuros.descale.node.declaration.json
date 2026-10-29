@@ -1,6 +1,6 @@
 {
 	"lexicon": 1,
-	"id": "is.neuros.node.declaration",
+	"id": "is.neuros.descale.node.declaration",
 	"defs": {
 		"main": {
 			"type": "record",
@@ -17,7 +17,7 @@
 					},
 					"keys": {
 						"type": "ref",
-						"ref": "is.neuros.defs#nodeKeys"
+						"ref": "is.neuros.descale.defs#nodeKeys"
 					},
 					"name": {
 						"type": "string",
@@ -29,7 +29,7 @@
 						"type": "array",
 						"maxLength": 4,
 						"description": "Relays this node listens on for signals.",
-						"items": { "type": "ref", "ref": "is.neuros.defs#nodeId" }
+						"items": { "type": "ref", "ref": "is.neuros.descale.defs#nodeId" }
 					},
 					"relay": {
 						"type": "ref",
@@ -43,7 +43,7 @@
 					},
 					"signature": {
 						"type": "ref",
-						"ref": "is.neuros.defs#signature",
+						"ref": "is.neuros.descale.defs#signature",
 						"description": "Made with keys.signingKey."
 					}
 				}
@@ -56,7 +56,13 @@
 				"endpoint": {
 					"type": "string",
 					"format": "uri",
-					"description": "HTTPS base URL serving this relay's is.neuros.relay.* methods. Public: publishing it reveals the relay's address."
+					"description": "HTTPS base URL serving this relay's is.neuros.descale.relay.* methods. Public: publishing it reveals the relay's address."
+				},
+				"tlsKeyPin": {
+					"type": "bytes",
+					"minLength": 32,
+					"maxLength": 32,
+					"description": "SHA-256 of the DER-encoded SubjectPublicKeyInfo of the relay's TLS key, for relays with self-signed certificates. When set, clients accept only a certificate with this key and skip CA and hostname checks. Covers HTTPS and TURN over TLS."
 				}
 			}
 		}

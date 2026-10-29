@@ -1,6 +1,6 @@
 {
 	"lexicon": 1,
-	"id": "is.neuros.relay.sendSignal",
+	"id": "is.neuros.descale.relay.sendSignal",
 	"defs": {
 		"main": {
 			"type": "procedure",
@@ -13,13 +13,13 @@
 					"properties": {
 						"to": {
 							"type": "ref",
-							"ref": "is.neuros.defs#nodeId",
+							"ref": "is.neuros.descale.defs#nodeId",
 							"description": "The recipient node."
 						},
 						"payload": {
 							"type": "bytes",
 							"maxLength": 8192,
-							"description": "24-byte nonce followed by a NaCl box from the sender's signal key to the recipient's. Plaintext is an is.neuros.signal.defs object in DAG-CBOR."
+							"description": "24-byte nonce followed by a NaCl box from the sender's signal key to the recipient's. Plaintext is an is.neuros.descale.signal.defs object in DAG-CBOR."
 						}
 					}
 				}

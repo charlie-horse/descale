@@ -1,6 +1,6 @@
 {
 	"lexicon": 1,
-	"id": "is.neuros.relay.checkReachability",
+	"id": "is.neuros.descale.relay.checkReachability",
 	"defs": {
 		"main": {
 			"type": "procedure",
@@ -40,7 +40,7 @@
 					"properties": {
 						"observedIp": {
 							"type": "ref",
-							"ref": "is.neuros.defs#ipAddress",
+							"ref": "is.neuros.descale.defs#ipAddress",
 							"description": "The caller's IP as the relay saw it."
 						},
 						"udpReachable": {

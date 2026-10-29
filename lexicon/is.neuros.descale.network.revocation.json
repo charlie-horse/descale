@@ -1,6 +1,6 @@
 {
 	"lexicon": 1,
-	"id": "is.neuros.network.revocation",
+	"id": "is.neuros.descale.network.revocation",
 	"defs": {
 		"main": {
 			"type": "record",
@@ -17,7 +17,7 @@
 					},
 					"subject": {
 						"type": "ref",
-						"ref": "is.neuros.defs#nodeId",
+						"ref": "is.neuros.descale.defs#nodeId",
 						"description": "The revoked node's signing key."
 					},
 					"reason": {
@@ -31,8 +31,8 @@
 					},
 					"signature": {
 						"type": "ref",
-						"ref": "is.neuros.defs#signature",
-						"description": "Made with a key of an admin listed in the current config."
+						"ref": "is.neuros.descale.defs#signature",
+						"description": "Made with a full key of an admin in the current config. Renew keys can't revoke."
 					}
 				}
 			}

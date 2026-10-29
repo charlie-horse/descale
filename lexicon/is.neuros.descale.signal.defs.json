@@ -1,7 +1,7 @@
 {
 	"lexicon": 1,
-	"id": "is.neuros.signal.defs",
-	"description": "Plaintext signals exchanged between nodes, sealed inside is.neuros.relay.sendSignal payloads. Each plaintext is one of the objects below, identified by its $type.",
+	"id": "is.neuros.descale.signal.defs",
+	"description": "Plaintext signals exchanged between nodes, sealed inside is.neuros.descale.relay.sendSignal payloads. Each plaintext is one of the objects below, identified by its $type.",
 	"defs": {
 		"offer": {
 			"type": "object",
