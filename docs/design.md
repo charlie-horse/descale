@@ -31,7 +31,7 @@ Not in v1, though nothing in the design blocks them:
   owner repos (any DID, on any PDS)
   └── is.neuros.descale.node.declaration/*    signed by the node itself
 
-                  every node reads both, and trusts only the signatures
+                  every node follows both through Jetstream, and trusts only the signatures
 
   node A ── sendSignal ──▶ relay R ── subscribeSignals ──▶ node B
   node A ◀═══ WireGuard over the path ICE picks (direct UDP, or TURN via R) ═══▶ node B
@@ -59,7 +59,7 @@ Not in v1, though nothing in the design blocks them:
 
 Everything else follows from four rules:
 
-1. **Authority comes from signatures, never from where a record is stored.** Every Descale record carries its own signature. PDSes, firehoses, relays and other nodes are only transport.
+1. **Authority comes from signatures, never from where a record is stored.** Every Descale record carries its own signature. PDSes, ATProto relays, Jetstream, Descale relays and other nodes are only transport.
 2. **A PDS is storage.** It can withhold, delay, delete or replay records, but it can't forge them.
 3. **Deletes carry no authority.** Deleting a record is housekeeping. Trust ends only through a signed revocation, expiry, or a new config.
 4. **Newer wins, and nodes remember.** Configs carry a `seq` and declarations an `updatedAt`. Nodes reject anything older than what they've already seen, and keep revocations until those can no longer matter.
@@ -119,7 +119,7 @@ A node accepts a peer only if all of these hold:
 
 1. The device generates its three keys.
 2. It writes a declaration to its owner's repo, which needs a login for the owner's account, and shows its [fingerprint](#fingerprints).
-3. The admin tool spots the declaration on the firehose (see [Discovering declarations](#discovering-declarations)).
+3. The admin tool spots the declaration on Jetstream (see [Discovering declarations](#discovering-declarations)).
 4. The admin checks that the fingerprint shown on the device matches the declaration. A malicious PDS can plant a fake declaration in a member's repo, so this check is what keeps joining safe. A remote member reads their fingerprint to the admin over a channel the admin trusts.
 5. The admin picks a free address in their range and **creates** the approval at that record key. The grant is signed with a full key, and the first lease with any of the admin's keys. Creating fails if the address is already taken. Never use put for new approvals, because put overwrites.
 6. The device sees its approval and comes up.
@@ -130,11 +130,10 @@ A node's fingerprint is the first 20 characters of the base32 (RFC 4648) encodin
 
 ### Discovering declarations
 
-The admin tool subscribes to `com.atproto.sync.subscribeRepos` on the PDS of each member it knows, starting with just the admin, and picks out `is.neuros.descale.node.declaration` commits from those members.
+The admin tool follows Jetstream with `wantedCollections=is.neuros.descale.node.declaration` and `wantedDids` set to the members it knows, starting with just the admin.
 
 - **Known members only:** strangers can't flood the admin with join requests. The member list lives in the admin tool's own settings.
-- **PDS moves:** on `#identity` or `#account` events, the tool re-resolves the member's DID document and follows them to their new PDS.
-- **Alternative:** one connection to a relay's firehose covers every PDS, but carries all of ATProto's traffic.
+- **PDS moves:** the ATProto relay behind Jetstream follows members to new PDSes, so the tool doesn't track where they're hosted.
 
 ### Renewal
 
@@ -165,11 +164,12 @@ The root signs a new config with a higher `seq`.
 
 Records carry their own signatures, so nodes can read them from anywhere.
 
-- **Network repo (primary):** subscribe to `com.atproto.sync.subscribeRepos` on the network's PDS and keep the commits for the network DID. On reconnect, resume from the last cursor; if the cursor is missing or too old, re-read the collections with `com.atproto.repo.listRecords`. A PDS's firehose carries every repo it hosts, so on a large shared PDS, polling `com.atproto.sync.getLatestCommit` (for example every 60 seconds) is cheaper.
-- **Network DID document:** resolve it again periodically to catch a root key change.
-- **Declarations:** fetch from owner repos when needed, and again when signaling a node fails.
+- **Jetstream:** every node follows Jetstream, filtered with `wantedCollections=is.neuros.descale.*` and `wantedDids` set to the network DID plus every owner named in an approval. One connection covers the network repo and all declarations. As approvals add or remove owners, the node updates the filter on the open connection. Jetstream drops ATProto's repo proofs, which doesn't matter here because every record carries its own signature.
+- **Starting up:** Jetstream only streams changes, so a node first reads the current state once: the network repo's collections with `com.atproto.repo.listRecords`, and each approved node's declaration. It opens Jetstream with a cursor from just before that read, so nothing falls in the gap. It repeats the read only if it was offline longer than Jetstream keeps events. There's no polling.
+- **Jetstream URL:** a setting on every node and the admin tool. The ATProto relay feeding Jetstream must crawl every PDS involved. A self-hosted PDS asks it to with `com.atproto.sync.requestCrawl`.
+- **Network DID document:** cache it for at most a day, and re-resolve it early on Jetstream `identity` events for the network DID, to catch a root key change.
 - **Handshake check:** every connection setup carries each side's `configSeq` and a digest of its revocation set. The digest is SHA-256 over the sorted, newline-joined `did:key`s of all revocations it currently holds, including `revokedKeys` entries. On a mismatch, the side that's behind syncs from the network repo before continuing. If the repo is still behind, for example because the PDS is withholding records, the peer sends the missing signed records directly (`is.neuros.descale.signal.defs#records`).
-- **Coming back online:** a node that was offline syncs from the network repo before accepting any peer.
+- **Coming back online:** a node that was offline catches up on Jetstream, or repeats the startup read, before accepting any peer.
 
 ## Addressing
 
@@ -182,7 +182,7 @@ Records carry their own signatures, so nodes can read them from anywhere.
 
 ### Relays
 
-A relay is an approved node whose grant has `relay: true` and whose declaration has a `relay` endpoint. It runs:
+A relay (meaning a Descale relay, not an ATProto relay) is an approved node whose grant has `relay: true` and whose declaration has a `relay` endpoint. It runs:
 
 - STUN (RFC 8489) and TURN (RFC 8656) over UDP. TURN over TCP or TLS is a last resort for strict firewalls.
 - The `is.neuros.descale.relay.*` XRPC methods over HTTPS at its endpoint:
@@ -251,13 +251,23 @@ The offerer takes the ICE controlling role. If both sides send offers at once, t
 
 | Attacker | Can | Can't | Defenses |
 |---|---|---|---|
-| Any PDS | Withhold, delay, delete or replay records; plant fake declarations | Forge signed records; get a fake declaration approved | Record signatures, `seq` and `updatedAt`, remembered revocations, handshake check, expiry, fingerprint check |
-| Relay | See who signals whom and traffic volumes; drop traffic | Read signals or WireGuard traffic; impersonate nodes | Sealed signals, several home relays |
+| Any PDS, ATProto relay or Jetstream | Withhold, delay or replay records; invent declarations (and a PDS can delete records) | Forge signed records; get a fake declaration approved | Record signatures, `seq` and `updatedAt`, remembered revocations, handshake check, expiry, fingerprint check |
+| Descale relay | See who signals whom and traffic volumes; drop traffic | Read signals or WireGuard traffic; impersonate nodes | Sealed signals, several home relays |
 | Stolen device | Use the network until revoked | Stay in after revocation | Revocation, handshake check, expiry |
 | Stolen renewal agent | Extend existing leases; delete or withhold network records through its login | Admit new nodes; revoke nodes; outlast revocations | The root replaces the renew key; end the agent's PDS session |
 | Stolen full admin key | Grant nodes in that admin's range; revoke any node | Change the admin list | The root replaces the key, which invalidates its grants |
 | Stolen root key | Rewrite the config | Survive a DID document update | Replace `#neuros_root` in the DID document |
 | Whoever controls the network's domain | Replace the root key | | This is the trust anchor, so protect the domain, DNS and hosting |
+
+## Development
+
+During development, nothing touches the public ATProto network:
+
+- **Test PDS:** hosts the test network account and test member accounts.
+- **Test ATProto relay:** subscribes to the test PDS only.
+- **Test Jetstream:** reads the test relay's firehose.
+
+Nodes and the admin tool point their Jetstream URL setting at the test Jetstream.
 
 ## Lexicons
 
