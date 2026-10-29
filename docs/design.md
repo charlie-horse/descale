@@ -168,7 +168,12 @@ Records carry their own signatures, so nodes can read them from anywhere.
 - **Starting up:** Jetstream only streams changes, so a node first reads the current state once: the network repo's collections with `com.atproto.repo.listRecords`, and each approved node's declaration. It opens Jetstream with a cursor from just before that read, so nothing falls in the gap. It repeats the read only if it was offline longer than Jetstream keeps events. There's no polling.
 - **Jetstream URL:** a setting on every node and the admin tool. The ATProto relay feeding Jetstream must crawl every PDS involved. A self-hosted PDS asks it to with `com.atproto.sync.requestCrawl`.
 - **Network DID document:** cache it for at most a day, and re-resolve it early on Jetstream `identity` events for the network DID, to catch a root key change.
-- **Handshake check:** every connection setup carries each side's `configSeq` and a digest of its revocation set. The digest is SHA-256 over the sorted, newline-joined `did:key`s of all revocations it currently holds, including `revokedKeys` entries. On a mismatch, the side that's behind syncs from the network repo before continuing. If the repo is still behind, for example because the PDS is withholding records, the peer sends the missing signed records directly (`is.neuros.descale.signal.defs#records`).
+- **Handshake check:** every offer and answer carries the sender's `configSeq` and a digest of its revocation set: SHA-256 over the sorted, newline-joined `did:key`s of all revocations it holds, including `revokedKeys` entries. A mismatch only shows that the two sides differ, not which one is missing what. So a node that receives a sync state different from its own:
+  1. Re-reads the network repo once.
+  2. If the states still differ, sends its config and every revocation it holds, in as many `is.neuros.descale.signal.defs#records` messages as needed. This covers a PDS that is withholding records from one side.
+  3. Carries on, judging the peer by its own updated state.
+
+  Received records are verified like any others and kept if they're valid and new, so both sides end up with everything either one had. Each node does this at most once per session.
 - **Coming back online:** a node that was offline catches up on Jetstream, or repeats the startup read, before accepting any peer.
 
 ## Addressing
@@ -235,7 +240,7 @@ No PDS is involved, so a PDS can never obtain relay access.
 ### Connection setup
 
 1. A sends an `offer` with its ICE credentials, candidates and sync state.
-2. B runs the handshake check (see [Sync](#sync)), checks A against the [validity rules](#validity-rules), and replies with an `answer`.
+2. B runs the handshake check (see [Sync](#sync)), checks A against the [validity rules](#validity-rules), and replies with an `answer`. A does the same with the answer.
 3. Both sides send further candidates as they find them (`candidate`). ICE (RFC 8445) tests host, server-reflexive (STUN) and relayed (TURN) candidates and picks the best working pair.
 4. That path carries WireGuard. ICE consent checks (RFC 7675) keep it alive. After a network change, the node sends a new offer to restart ICE.
 

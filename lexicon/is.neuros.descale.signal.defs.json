@@ -41,7 +41,7 @@
 		},
 		"records": {
 			"type": "object",
-			"description": "Signed network records sent directly to a peer whose network repo is behind. Verify each exactly like a record read from the repo.",
+			"description": "The sender's config and every revocation it holds, sent when sync states still differ after re-reading the network repo. Split across messages if needed. Verify each record exactly like one read from the repo, and keep it if valid and new.",
 			"required": ["session", "createdAt", "records"],
 			"properties": {
 				"session": { "type": "ref", "ref": "#sessionId" },
@@ -87,7 +87,7 @@
 		},
 		"syncState": {
 			"type": "object",
-			"description": "Compared during the handshake check. On a mismatch, the side that's behind syncs before continuing.",
+			"description": "Compared during the handshake check. On a mismatch, the receiver re-reads the network repo, then sends #records if the states still differ. At most once per session.",
 			"required": ["configSeq", "revocationsDigest"],
 			"properties": {
 				"configSeq": {
