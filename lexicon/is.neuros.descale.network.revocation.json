@@ -1,0 +1,41 @@
+{
+	"lexicon": 1,
+	"id": "is.neuros.descale.network.revocation",
+	"defs": {
+		"main": {
+			"type": "record",
+			"description": "Permanently revokes a node's signing key. Stored in the network's repo. Nodes keep it until createdAt + maxApprovalSeconds. A revoked device must generate new keys to rejoin.",
+			"key": "tid",
+			"record": {
+				"type": "object",
+				"required": ["network", "subject", "createdAt", "signature"],
+				"properties": {
+					"network": {
+						"type": "string",
+						"format": "did",
+						"description": "The network DID. Must match the repo this record is stored in."
+					},
+					"subject": {
+						"type": "ref",
+						"ref": "is.neuros.descale.defs#nodeId",
+						"description": "The revoked node's signing key."
+					},
+					"reason": {
+						"type": "string",
+						"maxLength": 64,
+						"knownValues": ["lost", "compromised", "retired"]
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "datetime"
+					},
+					"signature": {
+						"type": "ref",
+						"ref": "is.neuros.descale.defs#signature",
+						"description": "Made with a full key of an admin in the current config. Renew keys can't revoke."
+					}
+				}
+			}
+		}
+	}
+}

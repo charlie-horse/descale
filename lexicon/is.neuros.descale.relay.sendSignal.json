@@ -1,0 +1,35 @@
+{
+	"lexicon": 1,
+	"id": "is.neuros.descale.relay.sendSignal",
+	"defs": {
+		"main": {
+			"type": "procedure",
+			"description": "Deliver a sealed signal to a node listening on this relay. Not stored: fails if the recipient isn't connected. Requires a node-signed JWT; the relay sets the sender from it.",
+			"input": {
+				"encoding": "application/json",
+				"schema": {
+					"type": "object",
+					"required": ["to", "payload"],
+					"properties": {
+						"to": {
+							"type": "ref",
+							"ref": "is.neuros.descale.defs#nodeId",
+							"description": "The recipient node."
+						},
+						"payload": {
+							"type": "bytes",
+							"maxLength": 8192,
+							"description": "24-byte nonce followed by a NaCl box from the sender's signal key to the recipient's. Plaintext is an is.neuros.descale.signal.defs object in DAG-CBOR."
+						}
+					}
+				}
+			},
+			"errors": [
+				{
+					"name": "RecipientUnavailable",
+					"description": "The recipient isn't listening on this relay. Try another of its home relays."
+				}
+			]
+		}
+	}
+}

@@ -1,0 +1,125 @@
+{
+	"lexicon": 1,
+	"id": "is.neuros.descale.network.config",
+	"defs": {
+		"main": {
+			"type": "record",
+			"description": "Network-wide settings and the admin list. Stored in the network's repo. Signed by the network root key (#neuros_root in the network DID document).",
+			"key": "literal:self",
+			"record": {
+				"type": "object",
+				"required": ["network", "seq", "ipv4Prefix", "admins", "maxApprovalSeconds", "createdAt", "signature"],
+				"properties": {
+					"network": {
+						"type": "string",
+						"format": "did",
+						"description": "The network DID. Must match the repo this record is stored in."
+					},
+					"seq": {
+						"type": "integer",
+						"minimum": 1,
+						"description": "Increases with every new config. Nodes reject a config with a lower seq than one they have seen."
+					},
+					"name": {
+						"type": "string",
+						"maxLength": 640,
+						"maxGraphemes": 64
+					},
+					"ipv4Prefix": {
+						"type": "ref",
+						"ref": "is.neuros.descale.defs#ipv4Prefix",
+						"description": "The network's IPv4 address space."
+					},
+					"ipv6Prefix": {
+						"type": "ref",
+						"ref": "is.neuros.descale.defs#ipv6Prefix",
+						"description": "Optional IPv6 ULA /96. A node's IPv6 address is this prefix followed by its 32 IPv4 bits."
+					},
+					"admins": {
+						"type": "array",
+						"minLength": 1,
+						"maxLength": 32,
+						"items": { "type": "ref", "ref": "#admin" }
+					},
+					"revokedKeys": {
+						"type": "array",
+						"maxLength": 1024,
+						"description": "Revocations carried over when an admin is removed or a full key is replaced, so they keep counting.",
+						"items": { "type": "ref", "ref": "#revokedKey" }
+					},
+					"maxApprovalSeconds": {
+						"type": "integer",
+						"minimum": 3600,
+						"maximum": 31536000,
+						"description": "Longest allowed lease. Also how long nodes keep a revocation. Suggested: 2592000 (30 days)."
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "datetime"
+					},
+					"signature": {
+						"type": "ref",
+						"ref": "is.neuros.descale.defs#signature",
+						"description": "Made with the network root key."
+					}
+				}
+			}
+		},
+		"admin": {
+			"type": "object",
+			"required": ["did", "keys", "ipv4Range"],
+			"properties": {
+				"did": {
+					"type": "string",
+					"format": "did",
+					"description": "The admin's account."
+				},
+				"keys": {
+					"type": "array",
+					"minLength": 1,
+					"maxLength": 16,
+					"description": "Keys this admin signs with, usually one per admin device.",
+					"items": { "type": "ref", "ref": "#adminKey" }
+				},
+				"ipv4Range": {
+					"type": "ref",
+					"ref": "is.neuros.descale.defs#ipv4Prefix",
+					"description": "The part of the network's ipv4Prefix this admin assigns addresses from. Admin ranges must not overlap."
+				}
+			}
+		},
+		"adminKey": {
+			"type": "object",
+			"required": ["key", "role"],
+			"properties": {
+				"key": {
+					"type": "string",
+					"format": "did",
+					"description": "The public key as a did:key (P-256 or K-256)."
+				},
+				"role": {
+					"type": "string",
+					"maxLength": 32,
+					"knownValues": ["full", "renew"],
+					"description": "full: signs grants, leases and revocations. renew: signs leases only, for renewal agents. Any other role can sign nothing."
+				}
+			}
+		},
+		"revokedKey": {
+			"type": "object",
+			"required": ["subject", "expiresAt"],
+			"properties": {
+				"subject": {
+					"type": "ref",
+					"ref": "is.neuros.descale.defs#nodeId",
+					"description": "The revoked node's signing key."
+				},
+				"expiresAt": {
+					"type": "string",
+					"format": "datetime",
+					"description": "When nodes may forget this entry: the original revocation's createdAt + maxApprovalSeconds."
+				}
+			}
+		}
+	}
+}

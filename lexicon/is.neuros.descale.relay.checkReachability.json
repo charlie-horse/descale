@@ -1,0 +1,59 @@
+{
+	"lexicon": 1,
+	"id": "is.neuros.descale.relay.checkReachability",
+	"defs": {
+		"main": {
+			"type": "procedure",
+			"description": "Dial-back test a node runs before it starts relaying. The relay probes the caller's observed IP only, never an address the caller supplies. Requires a node-signed JWT.",
+			"input": {
+				"encoding": "application/json",
+				"schema": {
+					"type": "object",
+					"required": ["nonce"],
+					"properties": {
+						"nonce": {
+							"type": "bytes",
+							"minLength": 12,
+							"maxLength": 12,
+							"description": "Used as the STUN transaction ID of the UDP probe, so the caller's listener can recognize it."
+						},
+						"udpPort": {
+							"type": "integer",
+							"minimum": 1,
+							"maximum": 65535,
+							"description": "Port of the caller's STUN/TURN listener. The relay sends a STUN Binding request here."
+						},
+						"tcpPort": {
+							"type": "integer",
+							"minimum": 1,
+							"maximum": 65535,
+							"description": "Port of the caller's HTTPS or TURN-over-TCP listener. The relay tries to connect here."
+						}
+					}
+				}
+			},
+			"output": {
+				"encoding": "application/json",
+				"schema": {
+					"type": "object",
+					"required": ["observedIp"],
+					"properties": {
+						"observedIp": {
+							"type": "ref",
+							"ref": "is.neuros.descale.defs#ipAddress",
+							"description": "The caller's IP as the relay saw it."
+						},
+						"udpReachable": {
+							"type": "boolean",
+							"description": "Whether the UDP probe got a valid response. Absent if udpPort wasn't given."
+						},
+						"tcpReachable": {
+							"type": "boolean",
+							"description": "Whether the TCP connection succeeded. Absent if tcpPort wasn't given."
+						}
+					}
+				}
+			}
+		}
+	}
+}

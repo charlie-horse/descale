@@ -1,0 +1,70 @@
+{
+	"lexicon": 1,
+	"id": "is.neuros.descale.node.declaration",
+	"defs": {
+		"main": {
+			"type": "record",
+			"description": "A node's description of itself, stored in its owner's repo. Doubles as the request to join. Signed by the node's own signing key. Public: anyone can read it.",
+			"key": "tid",
+			"record": {
+				"type": "object",
+				"required": ["network", "keys", "updatedAt", "signature"],
+				"properties": {
+					"network": {
+						"type": "string",
+						"format": "did",
+						"description": "The network this node belongs to."
+					},
+					"keys": {
+						"type": "ref",
+						"ref": "is.neuros.descale.defs#nodeKeys"
+					},
+					"name": {
+						"type": "string",
+						"maxLength": 640,
+						"maxGraphemes": 64,
+						"description": "Optional device name. Reveals what devices the owner has."
+					},
+					"homeRelays": {
+						"type": "array",
+						"maxLength": 4,
+						"description": "Relays this node listens on for signals.",
+						"items": { "type": "ref", "ref": "is.neuros.descale.defs#nodeId" }
+					},
+					"relay": {
+						"type": "ref",
+						"ref": "#relayInfo",
+						"description": "Set only if this node acts as a relay. Its approval must also allow it."
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "datetime",
+						"description": "Increases with every change. Nodes ignore versions older than one they have seen."
+					},
+					"signature": {
+						"type": "ref",
+						"ref": "is.neuros.descale.defs#signature",
+						"description": "Made with keys.signingKey."
+					}
+				}
+			}
+		},
+		"relayInfo": {
+			"type": "object",
+			"required": ["endpoint"],
+			"properties": {
+				"endpoint": {
+					"type": "string",
+					"format": "uri",
+					"description": "HTTPS base URL serving this relay's is.neuros.descale.relay.* methods. Public: publishing it reveals the relay's address."
+				},
+				"tlsKeyPin": {
+					"type": "bytes",
+					"minLength": 32,
+					"maxLength": 32,
+					"description": "SHA-256 of the DER-encoded SubjectPublicKeyInfo of the relay's TLS key, for relays with self-signed certificates. When set, clients accept only a certificate with this key and skip CA and hostname checks. Covers HTTPS and TURN over TLS."
+				}
+			}
+		}
+	}
+}
