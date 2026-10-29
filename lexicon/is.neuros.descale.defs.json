@@ -5,7 +5,7 @@
 	"defs": {
 		"signature": {
 			"type": "object",
-			"description": "A signature over the record's DAG-CBOR encoding with its 'signature' field removed. ECDSA over SHA-256, 64-byte compact low-S, as used for ATProto commits.",
+			"description": "A signature over the DAG-CBOR encoding of the object that contains it, with that object's 'signature' field removed. ECDSA over SHA-256, 64-byte compact low-S, as used for ATProto commits.",
 			"required": ["key", "value"],
 			"properties": {
 				"key": {

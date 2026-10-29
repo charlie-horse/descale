@@ -42,8 +42,10 @@
 		"records": {
 			"type": "object",
 			"description": "Signed network records sent directly to a peer whose network repo is behind. Verify each exactly like a record read from the repo.",
-			"required": ["records"],
+			"required": ["session", "createdAt", "records"],
 			"properties": {
+				"session": { "type": "ref", "ref": "#sessionId" },
+				"createdAt": { "type": "string", "format": "datetime" },
 				"records": {
 					"type": "array",
 					"maxLength": 64,
@@ -96,7 +98,7 @@
 					"type": "bytes",
 					"minLength": 32,
 					"maxLength": 32,
-					"description": "SHA-256 over the sorted, newline-joined did:keys of all revocations currently held."
+					"description": "SHA-256 over the sorted, newline-joined did:keys of all revocations currently held, including the config's revokedKeys entries."
 				}
 			}
 		}
